@@ -1,4 +1,4 @@
-set(hdrs Dynamixel.h Exception.h)
+set(hdrs DynamixelV1.h DynamixelV2.h Exception.h)
 
 
 set(install_hdrs ${hdrs})

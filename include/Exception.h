@@ -313,6 +313,70 @@ namespace ssr {
       }
     };
 
+
+
+    class CRCException : public DynamixelException {
+    public:
+      CRCException(void) {}
+      virtual ~CRCException() throw() {}
+    public:
+      const char* what() const throw() {
+	return "CRC Error";
+      }
+    };
+
+    class ResultFailException : public DynamixelException {
+    public:
+      ResultFailException(void) {}
+      virtual ~ResultFailException() throw() {}
+    public:
+      const char* what() const throw() {
+	return "Result Failed";
+      }
+    };
+
+    class LengthException : public DynamixelException {
+    public:
+      LengthException(void) {}
+      virtual ~LengthException() throw() {}
+    public:
+      const char* what() const throw() {
+	return "Package Length Error";
+      }
+    };
+
+    class LimitException : public DynamixelException {
+    public:
+      LimitException(void) {}
+      virtual ~LimitException(void) throw() {}
+    public:
+      const char* what() const throw() {
+	return "Parameter Limit Error";
+      }
+    };
+
+    class AccessException : public DynamixelException {
+    public:
+      AccessException(void) {}
+      virtual ~AccessException(void) throw() {}
+    public:
+      const char* what() const throw() {
+	return "Access Error";
+      }
+    };
+
+    class UnknownException : public DynamixelException {
+    public:
+      UnknownException(void) {}
+      virtual ~UnknownException(void) throw() {}
+    public:
+      const char* what() const throw() {
+	return "Unknown Error";
+      }
+    };
+
+
+    
   }
 };
 

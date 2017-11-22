@@ -1,4 +1,4 @@
-set(_srcs Dynamixel.cpp)
+set(_srcs DynamixelV1.cpp DynamixelV2.cpp)
 
 set(test_srcs test.cpp ${_srcs})
 

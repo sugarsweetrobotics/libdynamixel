@@ -7,7 +7,7 @@
  * copyright Revast Co., Ltd. 2010 all rights reserved.
  ***************************************************/
 
-#include "Dynamixel.h"
+#include "DynamixelV1.h"
 
 using namespace ssr;
 using namespace ssr::dynamixel;
@@ -20,9 +20,9 @@ Dynamixel::~Dynamixel(void)
 {
 }
 
-void Dynamixel::WritePacket (unsigned char cID, TInstruction cInst,  unsigned char *pParam, int iLength) {
-  int sum; 
-  unsigned char   buf[200]; 
+void Dynamixel::WritePacket (uint8_t cID, TInstruction cInst,  uint8_t *pParam, int32_t iLength) {
+  int32_t sum; 
+  uint8_t   buf[200]; 
   unsigned long   wlen; 
 
 
@@ -33,14 +33,14 @@ void Dynamixel::WritePacket (unsigned char cID, TInstruction cInst,  unsigned ch
   buf[0] = PACKET_HEADER_FIXED_VALUE0; // fixed
   buf[1] = PACKET_HEADER_FIXED_VALUE1; // fixed     
   buf[2] = sum = cID; // ID
-  buf[3] = (unsigned char)(iLength + 2); // data length
+  buf[3] = (uint8_t)(iLength + 2); // data length
   sum += buf[3];
   buf[4] = cInst; // Instruction code.
   sum += buf[4];
-  for (int i = 0; i < iLength; i++) { // setting parameter.
+  for (int32_t i = 0; i < iLength; i++) { // setting parameter.
     sum += (buf[i + 5] = pParam[i]);
   }
-  buf[iLength + 5] = (unsigned char)(~(sum) & 0xFF); // summation check.
+  buf[iLength + 5] = (uint8_t)(~(sum) & 0xFF); // summation check.
 
   //m_SerialPort.PurgeRxClear();
   m_SerialPort.FlushRxBuffer();
@@ -54,11 +54,11 @@ void Dynamixel::WritePacket (unsigned char cID, TInstruction cInst,  unsigned ch
 
 
 
-void Dynamixel::ReceivePacket (unsigned char *pRcv, int *pLength, int mask, int timeout /* [ms] */)
+void Dynamixel::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, int32_t timeout /* [ms] */)
 {
-  int ind;
-  unsigned char           sum;
-  unsigned char dataLength;
+  int32_t ind;
+  uint8_t           sum;
+  uint8_t dataLength;
 
   *pLength = 0;
 
@@ -113,7 +113,7 @@ void Dynamixel::ReceivePacket (unsigned char *pRcv, int *pLength, int mask, int 
     throw ReceivePacketException();
   }
 
-  unsigned char error = pRcv[PACKET_HEADER_SIZE];
+  uint8_t error = pRcv[PACKET_HEADER_SIZE];
   if(error & INPUT_VOLTAGE_ERROR_FLAG & mask) {
     throw InputVoltageException();
   } else if (error & ANGLE_LIMIT_ERROR_FLAG & mask) {
@@ -131,8 +131,7 @@ void Dynamixel::ReceivePacket (unsigned char *pRcv, int *pLength, int mask, int 
   }
 
 
-
-  for(int i = 0;i < dataLength-1;i++) {
+  for(int32_t i = 0;i < dataLength-1;i++) {
     sum += pRcv[PACKET_HEADER_SIZE + i];
   }
   if(((~sum) & 0xFFU) != pRcv[PACKET_HEADER_SIZE + dataLength -1]) {
@@ -141,18 +140,17 @@ void Dynamixel::ReceivePacket (unsigned char *pRcv, int *pLength, int mask, int 
 }
 
 
-
-void Dynamixel::WriteByteData (unsigned char id, unsigned char adr, unsigned char dat, int mask, int timeout) {
-  int             l1;
-  unsigned char   param[10];
-  unsigned char   rbuf[10];
+void Dynamixel::WriteByteData (uint8_t id, uint8_t adr, uint8_t dat, int32_t mask, int32_t timeout) {
+  int32_t l1;
+  uint8_t param[10];
+  uint8_t rbuf[10];
 
   param[0] = adr;
   param[1] = dat;
 
   ssr::MutexBinder m(m_Mutex);
 
-  int i = 0;
+  int32_t i = 0;
  write_byte_data_try:
   try {
     WritePacket (id, INST_WRITE, param, 2);
@@ -169,10 +167,10 @@ void Dynamixel::WriteByteData (unsigned char id, unsigned char adr, unsigned cha
 }
 
 
-void Dynamixel::ReadByteData (unsigned char id, unsigned char adr, unsigned char *result, int mask, int timeout) {
-  int             l1;
-  unsigned char           param[10];
-  unsigned char           rbuf[10];
+void Dynamixel::ReadByteData (uint8_t id, uint8_t adr, uint8_t *result, int32_t mask, int32_t timeout) {
+  int32_t             l1;
+  uint8_t           param[10];
+  uint8_t           rbuf[10];
 
   if (id == BROADCASTING_ID) {
     throw new WrongArgException();
@@ -182,7 +180,7 @@ void Dynamixel::ReadByteData (unsigned char id, unsigned char adr, unsigned char
 
   param[0] = adr;
   param[1] = 1;
-  int i = 0;
+  int32_t i = 0;
  read_byte_data_try:
   try {
     WritePacket (id, INST_READ, param, 2);
@@ -199,11 +197,11 @@ void Dynamixel::ReadByteData (unsigned char id, unsigned char adr, unsigned char
 }
 
 
-void Dynamixel::ReadWordData (unsigned char id, unsigned char adr, unsigned short *result, int mask, int timeout)
+void Dynamixel::ReadWordData (uint8_t id, uint8_t adr, uint16_t *result, int32_t mask, int32_t timeout)
 {
-  int             l1;
-  unsigned char           param[10];
-  unsigned char           rbuf[10];
+  int32_t             l1;
+  uint8_t           param[10];
+  uint8_t           rbuf[10];
 
   if (id == BROADCASTING_ID) {
     throw new WrongArgException();
@@ -212,7 +210,7 @@ void Dynamixel::ReadWordData (unsigned char id, unsigned char adr, unsigned shor
   ssr::MutexBinder m(m_Mutex);
   param[0] = adr;
   param[1] = 2;
-  int i = 0;
+  int32_t i = 0;
  read_word_data_try:
   try {
     WritePacket (id, INST_READ, param, 2);
@@ -235,11 +233,11 @@ void Dynamixel::ReadWordData (unsigned char id, unsigned char adr, unsigned shor
 
 
 
-void Dynamixel::WriteWordData (unsigned char id, unsigned char adr, unsigned short dat, int mask, int timeout)
+void Dynamixel::WriteWordData (uint8_t id, uint8_t adr, uint16_t dat, int32_t mask, int32_t timeout)
 {
-  int             l1;
-  unsigned char           param[10];
-  unsigned char           rbuf[10];
+  int32_t             l1;
+  uint8_t           param[10];
+  uint8_t           rbuf[10];
 
   param[0] = adr;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -252,7 +250,7 @@ void Dynamixel::WriteWordData (unsigned char id, unsigned char adr, unsigned sho
 
   ssr::MutexBinder m(m_Mutex);
 
-  int i = 0;
+  int32_t i = 0;
  write_word_data_try:
   try {
     WritePacket (id, INST_WRITE, param, 3);
@@ -269,72 +267,71 @@ void Dynamixel::WriteWordData (unsigned char id, unsigned char adr, unsigned sho
 }
 
 
-void Dynamixel::LockItem (int mask) {
+void Dynamixel::LockItem (int32_t mask) {
   WriteByteData(BROADCASTING_ID, ADDRESS_LOCK, 1, mask, DEFAULT_RESPONSE_TIME);
 }
 
-void Dynamixel::SetCWAngleLimit(unsigned char id, unsigned short position, int mask, int timeout) {
+void Dynamixel::SetCWAngleLimit(uint8_t id, uint16_t position, int32_t mask, int32_t timeout) {
   WriteWordData (id, ADDRESS_CW_ANGLE_LIMIT, position, mask, timeout);
 }
 
-void Dynamixel::SetCCWAngleLimit(unsigned char id, unsigned short position, int mask, int timeout) {
+void Dynamixel::SetCCWAngleLimit(uint8_t id, uint16_t position, int32_t mask, int32_t timeout) {
   WriteWordData (id, ADDRESS_CCW_ANGLE_LIMIT, position, mask, timeout);
 }
 
-unsigned short Dynamixel::GetCWAngleLimit(unsigned char id, int mask, int timeout) {
-  unsigned short  result;
+uint16_t Dynamixel::GetCWAngleLimit(uint8_t id, int32_t mask, int32_t timeout) {
+  uint16_t  result;
 
   ReadWordData (id, ADDRESS_CW_ANGLE_LIMIT, &result, mask, timeout);
   return result;
 }
 
-unsigned short Dynamixel::GetCCWAngleLimit(unsigned char id, int mask, int timeout) {
-  unsigned short result;
+uint16_t Dynamixel::GetCCWAngleLimit(uint8_t id, int32_t mask, int32_t timeout) {
+  uint16_t result;
 
   ReadWordData (id, ADDRESS_CCW_ANGLE_LIMIT, &result, mask, timeout);
   return result;
 }
 
 
-void Dynamixel::MovePosition (unsigned char id, unsigned short position, int mask, int timeout) {
+void Dynamixel::MovePosition (uint8_t id, uint16_t position, int32_t mask, int32_t timeout) {
   WriteWordData (id, ADDRESS_GOAL_POSITION, position, mask, timeout);
 }
 
-void Dynamixel::SetCompliant (unsigned char id, bool on, int mask, int timeout) {
+void Dynamixel::SetCompliant (uint8_t id, bool on, int32_t mask, int32_t timeout) {
   WriteByteData (id, ADDRESS_TORQUE_ENABLE, !on, mask, timeout);
 }
 
-unsigned short Dynamixel::GetModelNumber (unsigned char id, int mask,
-					   int timeout/* = DEFAULT_RESPONSE_TIME*/) 
+uint16_t Dynamixel::GetModelNumber (uint8_t id, int32_t mask,
+					   int32_t timeout/* = DEFAULT_RESPONSE_TIME*/) 
 {
-  unsigned short result;
+  uint16_t result;
   ReadWordData(id, ADDRESS_MODEL_NUMBER, &result, mask, timeout);
   return result;
 }
 
 
 
-unsigned short Dynamixel::GetCurrentPosition (unsigned char id, int mask, int timeout) {
-  unsigned short  result;
-
+uint16_t Dynamixel::GetCurrentPosition (uint8_t id, int32_t mask, int32_t timeout) {
+  uint16_t  result;
   ReadWordData(id, ADDRESS_PRESENT_POSITION, &result, mask, timeout);
   return result;
 }
 
-unsigned short Dynamixel::GetTargetPosition (unsigned char id, int mask, int timeout) {
-  unsigned short  result;
+uint16_t Dynamixel::GetTargetPosition (uint8_t id, int32_t mask, int32_t timeout) {
+  uint16_t  result;
 
   ReadWordData(id, ADDRESS_GOAL_POSITION, &result, mask, timeout);
   return result;
 }
 
 
-void Dynamixel::SendSyncPosition(SyncPosData *pos, int num) {
-  unsigned char   param[150];
+void Dynamixel::SendSyncPosition(SyncPosData *pos, int32_t num) {
+  uint8_t   param[150];
 
   param[0] = ADDRESS_GOAL_POSITION;
   param[1] = 2;
-  for (int i = 0; i < num; i++) {
+  for (int32_t i = 0; i < num; i++) {
     if (pos->ID < BROADCASTING_ID) {
       param[i * 3 + 2] = pos->ID;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -352,7 +349,7 @@ void Dynamixel::SendSyncPosition(SyncPosData *pos, int num) {
   WritePacket (BROADCASTING_ID, INST_SYNC_WRITE, param, 2 + 3 * num);
 }
 
-//void Dynamixel::MoveVelocity(unsigned char id, unsigned short velocity) {
+//void Dynamixel::MoveVelocity(uint8_t id, uint16_t velocity) {
 //    if(velocity == 0){
 //      WriteWordData (id, ADDRESS_GOAL_SPEED, 1);
 //      WriteWordData (id, ADDRESS_GOAL_POSITION, GetCurrentPosition(id));
@@ -366,42 +363,42 @@ void Dynamixel::SendSyncPosition(SyncPosData *pos, int num) {
 //}
 
 /*----------------------------------------------------------------------------
-  unsigned short GetTargetVelocity (unsigned char id, int timeout)
+  uint16_t GetTargetVelocity (uint8_t id, int32_t timeout)
   ----------------------------------------------------------------------------
   DESCRIPTION:
   目標速度取得
   ----------------------------------------------------------------------------*/
-unsigned short Dynamixel::GetTargetVelocity (unsigned char id, int mask, int timeout) {
-  unsigned short  result;
+uint16_t Dynamixel::GetTargetVelocity (uint8_t id, int32_t mask, int32_t timeout) {
+  uint16_t  result;
 
   ReadWordData(id, ADDRESS_GOAL_SPEED, &result, mask, timeout);
   return result;
 }
 
 /*----------------------------------------------------------------------------
-  void SetTargetVelocity (unsigned char id, unsigned short velocity)
+  void SetTargetVelocity (uint8_t id, uint16_t velocity)
   ----------------------------------------------------------------------------
   DESCRIPTION:
   目標速度設定
   ----------------------------------------------------------------------------*/
-void Dynamixel::SetTargetVelocity (unsigned char id, unsigned short velocity, int mask,  int timeout) {
+void Dynamixel::SetTargetVelocity (uint8_t id, uint16_t velocity, int32_t mask,  int32_t timeout) {
   WriteWordData (id, ADDRESS_GOAL_SPEED, velocity, mask,  timeout);
 }
 
 /*----------------------------------------------------------------------------
-  void SetTorqueLimit (unsigned char id, unsigned short velocity)
+  void SetTorqueLimit (uint8_t id, uint16_t velocity)
   ----------------------------------------------------------------------------
   DESCRIPTION:
   トルク制限設定
   ----------------------------------------------------------------------------*/
-void Dynamixel::SetTorqueLimit (unsigned char id,unsigned short torque, int mask, int timeout){
+void Dynamixel::SetTorqueLimit (uint8_t id,uint16_t torque, int32_t mask, int32_t timeout){
   WriteWordData (id, ADDRESS_TORQUE_LIMIT, torque, mask, timeout);
 }
 
 
-short Dynamixel::GetCurrentTorque(unsigned char id, int mask, int timeout) 
+short Dynamixel::GetCurrentTorque(uint8_t id, int32_t mask, int32_t timeout) 
 {
-  unsigned short result;
+  uint16_t result;
   ReadWordData(id, ADDRESS_PRESENT_LOAD, &result, mask, timeout);
   if(result >= 1024) {
     return - (result -1024);
@@ -411,9 +408,9 @@ short Dynamixel::GetCurrentTorque(unsigned char id, int mask, int timeout)
 }
 
 
-short Dynamixel::GetCurrentVelocity(unsigned char id, int mask, int timeout) {
+short Dynamixel::GetCurrentVelocity(uint8_t id, int32_t mask, int32_t timeout) {
   short speed;
-  unsigned short  result;
+  uint16_t  result;
 
   ReadWordData(id, ADDRESS_PRESENT_SPEED, &result, mask, timeout);
   if(result > 1024) {
@@ -424,14 +421,14 @@ short Dynamixel::GetCurrentVelocity(unsigned char id, int mask, int timeout) {
   return speed;
 }
 
-unsigned short Dynamixel::GetCurrentTemperature(unsigned char id, int mask, int timeout)
+uint16_t Dynamixel::GetCurrentTemperature(uint8_t id, int32_t mask, int32_t timeout)
 {
-  unsigned short result;
+  uint16_t result;
   ReadWordData(id, ADDRESS_PRESENT_TEMP, &result, mask, timeout);
   return result;
 }
 
-void Dynamixel::SetLED(unsigned char id, int flag, int mask, int timeout) {
+void Dynamixel::SetLED(uint8_t id, int32_t flag, int32_t mask, int32_t timeout) {
   if(flag) {
     WriteByteData(id, ADDRESS_LED, 1, mask, timeout);
   } else {
@@ -440,74 +437,74 @@ void Dynamixel::SetLED(unsigned char id, int flag, int mask, int timeout) {
 
 }
 
-void Dynamixel::SetID(unsigned char id, unsigned char newID, int mask, int timeout)
+void Dynamixel::SetID(uint8_t id, uint8_t newID, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_ID, newID, mask, timeout);
 }
 
-void Dynamixel::SetBaudRate(unsigned char id, unsigned char baudrate, int mask, int timeout)
+void Dynamixel::SetBaudRate(uint8_t id, uint8_t baudrate, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_BAUDRATE, baudrate, mask, timeout);
 }
 
-void Dynamixel::SetHighestLimitTemperature(unsigned char id, unsigned char temperature, int mask, int timeout)
+void Dynamixel::SetHighestLimitTemperature(uint8_t id, uint8_t temperature, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_HIGHEST_LIMIT_TEMPERATURE, temperature, mask,  timeout);
 }
 
 
-void Dynamixel::SetLowestLimitVoltage(unsigned char id, unsigned char voltage, int mask, int timeout)
+void Dynamixel::SetLowestLimitVoltage(uint8_t id, uint8_t voltage, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_LOWEST_LIMIT_VOLTAGE, voltage, mask, timeout);
 }
 
-void Dynamixel::SetHighestLimitVoltage(unsigned char id, unsigned char voltage, int mask, int timeout)
+void Dynamixel::SetHighestLimitVoltage(uint8_t id, uint8_t voltage, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_HIGHEST_LIMIT_VOLTAGE, voltage, mask, timeout);
 }
 
-void Dynamixel::SetAlarmShutdownFlag(unsigned char id, unsigned char flag, int mask, int timeout)
+void Dynamixel::SetAlarmShutdownFlag(uint8_t id, uint8_t flag, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_ALARM_SHUTDOWN, flag, mask, timeout);
 }
 
-unsigned char Dynamixel::GetAlarmShutdownFlag(unsigned char id, int mask, int timeout)
+uint8_t Dynamixel::GetAlarmShutdownFlag(uint8_t id, int32_t mask, int32_t timeout)
 {
-  unsigned char result;
+  uint8_t result;
   ReadByteData(id, ADDRESS_ALARM_SHUTDOWN, &result, mask, timeout);
   return result;
 }
 
-void Dynamixel::SetAlarmLEDFlag(unsigned char id, unsigned char flag, int mask, int timeout)
+void Dynamixel::SetAlarmLEDFlag(uint8_t id, uint8_t flag, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_ALARM_LED, flag, mask, timeout);
 }
 
-unsigned char Dynamixel::GetAlarmLEDFlag(unsigned char id, int mask, int timeout)
+uint8_t Dynamixel::GetAlarmLEDFlag(uint8_t id, int32_t mask, int32_t timeout)
 {
-  unsigned char result;
+  uint8_t result;
   ReadByteData(id, ADDRESS_ALARM_LED, &result, mask,  timeout);
   return result;
 }
 
-void Dynamixel::SetComplianceSlope(unsigned char id, unsigned char slope,  int mask, int timeout)
+void Dynamixel::SetComplianceSlope(uint8_t id, uint8_t slope,  int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_CW_COMP_SLOPE, slope, mask, timeout);
   WriteByteData(id, ADDRESS_CCW_COMP_SLOPE, slope, mask,  timeout);
 }
 
-void Dynamixel::SetComplianceMargin(unsigned char id, unsigned char margin,  int mask, int timeout)
+void Dynamixel::SetComplianceMargin(uint8_t id, uint8_t margin,  int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_CW_COMP_MARGIN, margin, mask, timeout);
   WriteByteData(id, ADDRESS_CCW_COMP_MARGIN, margin, mask, timeout);
 }
 
-void Dynamixel::SetPunch(unsigned char id, unsigned short punch,  int mask, int timeout)
+void Dynamixel::SetPunch(uint8_t id, uint16_t punch,  int32_t mask, int32_t timeout)
 {
   WriteWordData(id, ADDRESS_PUNCH, punch, mask, timeout);
 }
 
-void Dynamixel::TorqueEnable(unsigned char id, int mask, int timeout)
+void Dynamixel::TorqueEnable(uint8_t id, int32_t mask, int32_t timeout)
 {
   WriteByteData(id, ADDRESS_TORQUE_ENABLE, 1, mask, timeout);
 }

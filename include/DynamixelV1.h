@@ -54,14 +54,14 @@ namespace ssr {
        * @else
        * @endif
        */
-      unsigned char  ID;
+      uint8_t  ID;
       /**
        * @if jp
        * @brief Dynamixelモータの目標位置
        * @else
        * @endif
        */
-      unsigned short GoalPosition;
+      uint16_t GoalPosition;
     };
     
     /** 
@@ -96,19 +96,12 @@ namespace ssr {
 	INST_SYNG_REG_WRITE=0x85
       } ;
       
-      static const int PACKET_HEADER_SIZE = 4;
-      
-      static const unsigned char PACKET_HEADER_FIXED_VALUE0 = 0xFFU;
-      static const unsigned char PACKET_HEADER_FIXED_VALUE1 = 0xFFU;
-      
-      static const unsigned char PACKET_MAX_ID = 254U;
-      
-      static const unsigned char PACKET_MAX_DATASIZE = 120U;
-      
-      
-      
-      
-      static const int DYNAMIXEL_RECEIVEPACKET_TRYCYCLE = 10;
+      static const int32_t PACKET_HEADER_SIZE = 4;
+      static const uint8_t PACKET_HEADER_FIXED_VALUE0 = 0xFFU;
+      static const uint8_t PACKET_HEADER_FIXED_VALUE1 = 0xFFU;
+      static const uint8_t PACKET_MAX_ID = 254U;
+      static const uint8_t PACKET_MAX_DATASIZE = 120U;
+      static const int32_t DYNAMIXEL_RECEIVEPACKET_TRYCYCLE = 10;
       
     private:
       
@@ -123,7 +116,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char INPUT_VOLTAGE_ERROR_FLAG = 0x01;
+      static const uint8_t INPUT_VOLTAGE_ERROR_FLAG = 0x01;
       
       /**
        * @if jp
@@ -134,7 +127,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char ANGLE_LIMIT_ERROR_FLAG = 0x02;
+      static const uint8_t ANGLE_LIMIT_ERROR_FLAG = 0x02;
       
       /**
        * @if jp
@@ -145,7 +138,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char OVERHEATING_ERROR_FLAG = 0x04;
+      static const uint8_t OVERHEATING_ERROR_FLAG = 0x04;
       
       /**
        * @if jp
@@ -156,7 +149,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char RANGE_ERROR_FLAG = 0x08;
+      static const uint8_t RANGE_ERROR_FLAG = 0x08;
       
       /**
        * @if jp
@@ -167,7 +160,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char CHECKSUM_ERROR_FLAG = 0x10;
+      static const uint8_t CHECKSUM_ERROR_FLAG = 0x10;
       
       /**
        * @if jp
@@ -178,7 +171,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char OVERLOAD_ERROR_FLAG = 0x20;
+      static const uint8_t OVERLOAD_ERROR_FLAG = 0x20;
       
       /**
        * @if jp
@@ -189,7 +182,7 @@ namespace ssr {
        * @see #GetAlarmShutdownFlag
        * @see #GetAlarmLEDFlag
        */
-      static const unsigned char INSTRUCTION_ERROR_FLAG = 0x40;
+      static const uint8_t INSTRUCTION_ERROR_FLAG = 0x40;
       
       /** 
        * @if jp
@@ -202,7 +195,7 @@ namespace ssr {
        * @see CTimeOutException
        *
        */
-      static const int DEFAULT_RESPONSE_TIME = 50;
+      static const int32_t DEFAULT_RESPONSE_TIME = 50;
       
       /** 
        * @if jp
@@ -216,7 +209,7 @@ namespace ssr {
        * @endif
        *
        */
-      static const unsigned char BROADCASTING_ID = 254U;
+      static const uint8_t BROADCASTING_ID = 254U;
 
     public:
       /** 
@@ -267,10 +260,10 @@ namespace ssr {
        * @exception CComAccessException
        * @exception CWritePacketException
        */
-      void WritePacket (unsigned char cID, 
+      void WritePacket (uint8_t cID, 
 			TInstruction cInst, 
-			unsigned char *pParam, 
-			int iLength);
+			uint8_t *pParam, 
+			int32_t iLength);
 
       /** 
        * @if jp
@@ -295,10 +288,10 @@ namespace ssr {
        * @exception COverloadException
        * @exception CRangeException
        */
-      void ReceivePacket (unsigned char *pRcv,
-			  int *pLength,
-			  int mask,
-			  int timeout);
+      void ReceivePacket (uint8_t *pRcv,
+			  int32_t *pLength,
+			  int32_t mask,
+			  int32_t timeout);
 		
 			
       /** 
@@ -326,11 +319,11 @@ namespace ssr {
        * @exception revast::dynamixel::OverloadException
        * @exception revast::dynamixel::RangeException
        */
-      void WriteByteData (unsigned char id,
-			  unsigned char adr, 
-			  unsigned char dat, 
-			  int mask,
-			  int timeout);
+      void WriteByteData (uint8_t id,
+			  uint8_t adr, 
+			  uint8_t dat, 
+			  int32_t mask,
+			  int32_t timeout);
 
       /** 
        * @if jp
@@ -357,11 +350,11 @@ namespace ssr {
        * @exception revast::dynamixel::OverloadException
        * @exception revast::dynamixel::RangeException
        */
-      void ReadByteData (unsigned char id,
-			 unsigned char adr, 
-			 unsigned char *result,
-			 int mask,
-			 int timeout);
+      void ReadByteData (uint8_t id,
+			 uint8_t adr, 
+			 uint8_t *result,
+			 int32_t mask,
+			 int32_t timeout);
 
       /** 
        * @if jp
@@ -388,11 +381,11 @@ namespace ssr {
        * @exception revast::dynamixel::OverloadException
        * @exception revast::dynamixel::RangeException
        */
-      void WriteWordData (unsigned char id,
-			  unsigned char adr,
-			  unsigned short dat, 
-			  int mask,
-			  int timeout);
+      void WriteWordData (uint8_t id,
+			  uint8_t adr,
+			  uint16_t dat, 
+			  int32_t mask,
+			  int32_t timeout);
 
       /** 
        * @if jp
@@ -419,11 +412,11 @@ namespace ssr {
        * @exception revast::dynamixel::OverloadException
        * @exception revast::dynamixel::RangeException
        */
-      void ReadWordData (unsigned char id, 
-			 unsigned char adr, 
-			 unsigned short *result,
-			 int mask, 
-			 int timeout );
+      void ReadWordData (uint8_t id, 
+			 uint8_t adr, 
+			 uint16_t *result,
+			 int32_t mask, 
+			 int32_t timeout );
 
     public:
 
@@ -443,7 +436,7 @@ namespace ssr {
        *
        * When this function is called, the motor is off. <BR />
        * CAUTION!!!! <BR />
-       * When the motor is off, the joint of robot is free.
+       * When the motor is off, the joint32_t of robot is free.
        * If the robot fall down onto the floor, that might destroy the robot. 
        *
        * @param id RC servo id.
@@ -462,7 +455,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetCompliant (unsigned char id, bool on, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetCompliant (uint8_t id, bool on, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -489,7 +482,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void LockItem (int mask=0x7F);
+      void LockItem (int32_t mask=0x7F);
 
       /** 
        * @if jp
@@ -518,7 +511,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void MovePosition (unsigned char id, unsigned short position, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void MovePosition (uint8_t id, uint16_t position, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
       /** 
@@ -551,8 +544,8 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetModelNumber (unsigned char id, int mask=0x7F,
-				     int timeout = DEFAULT_RESPONSE_TIME) ;
+      uint16_t GetModelNumber (uint8_t id, int32_t mask=0x7F,
+				     int32_t timeout = DEFAULT_RESPONSE_TIME) ;
 
 
 
@@ -586,8 +579,8 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetCurrentPosition (unsigned char id,
-					 int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME) ;
+      uint16_t GetCurrentPosition (uint8_t id,
+					 int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME) ;
 
       /** 
        * @if jp
@@ -619,8 +612,8 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetTargetPosition (unsigned char id,
-					int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME);
+      uint16_t GetTargetPosition (uint8_t id,
+					int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -639,7 +632,7 @@ namespace ssr {
        * @param velocity target velocity. [0-1023]
        * @endif
        *
-       * @see #MoveImmediately(unsigned char, unsigned short)
+       * @see #MoveImmediately(uint8_t, uint16_t)
        * @exception ssr::system::CComAccessException
        * @exception ssr::dynamixel::ReceivePacketException
        * @exception ssr::dynamixel::WritePacketException
@@ -652,7 +645,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetTargetVelocity (unsigned char id,unsigned short velocity, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetTargetVelocity (uint8_t id,uint16_t velocity, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -682,8 +675,8 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetTargetVelocity (unsigned char id,
-					int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME);
+      uint16_t GetTargetVelocity (uint8_t id,
+					int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -713,11 +706,11 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      short GetCurrentVelocity(unsigned char id, int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME);
+      short GetCurrentVelocity(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
 
 
       // obsolute
-      //void MoveVelocity (unsigned char id, unsigned short velocity);
+      //void MoveVelocity (uint8_t id, uint16_t velocity);
 
       /** 
        * @if jp
@@ -749,7 +742,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetTorqueLimit (unsigned char id, unsigned short torque, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetTorqueLimit (uint8_t id, uint16_t torque, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -778,7 +771,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      short GetCurrentTorque(unsigned char id, int mask=0x7F,  int timeout = DEFAULT_RESPONSE_TIME);
+      short GetCurrentTorque(uint8_t id, int32_t mask=0x7F,  int32_t timeout = DEFAULT_RESPONSE_TIME);
 
 
       /** 
@@ -808,7 +801,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetCurrentTemperature(unsigned char id, int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME);
+      uint16_t GetCurrentTemperature(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -837,7 +830,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetSupplyVoltage(unsigned char id, int mask=0x7F, int timeout = DEFAULT_RESPONSE_TIME);
+      uint16_t GetSupplyVoltage(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -854,7 +847,7 @@ namespace ssr {
        * @param flag if TRUE, LED is turned on. if FALSE, LED is turned off.
        * @endif
        *
-       * @see #ClrLED(unsigned char, int)
+       * @see #ClrLED(uint8_t, int)
        * @exception ssr::system::CComAccessException
        * @exception ssr::dynamixel::ReceivePacketException
        * @exception ssr::dynamixel::WritePacketException
@@ -867,7 +860,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetLED(unsigned char id, int flag = true,int mask=0x7F,  int timeout=DEFAULT_RESPONSE_TIME);
+      void SetLED(uint8_t id, int32_t flag = true,int32_t mask=0x7F,  int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
       /** 
@@ -883,7 +876,7 @@ namespace ssr {
        * @param id ID number of RC Servo.
        * @endif
        *
-       * @see #SetLED(unsigned char, int, int)
+       * @see #SetLED(uint8_t, int, int)
        * @exception ssr::system::CComAccessException
        * @exception ssr::dynamixel::ReceivePacketException
        * @exception ssr::dynamixel::WritePacketException
@@ -896,7 +889,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void ClearLED(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME) {
+      void ClearLED(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME) {
 	SetLED(id, false, mask, timeout);
       }
 
@@ -944,7 +937,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SendSyncPosition(SyncPosData *pos, int num);
+      void SendSyncPosition(SyncPosData *pos, int32_t num);
 
 
       /** 
@@ -975,7 +968,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetCWAngleLimit(unsigned char id, unsigned short position, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME) ;
+      void SetCWAngleLimit(uint8_t id, uint16_t position, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME) ;
 
       /** 
        * @if jp
@@ -1005,7 +998,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetCCWAngleLimit(unsigned char id, unsigned short position, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME) ;
+      void SetCCWAngleLimit(uint8_t id, uint16_t position, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME) ;
 			
       /** 
        * @if jp
@@ -1034,7 +1027,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetCWAngleLimit(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      uint16_t GetCWAngleLimit(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1063,7 +1056,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned short GetCCWAngleLimit(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      uint16_t GetCCWAngleLimit(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1092,7 +1085,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetID(unsigned char id, unsigned char newID, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetID(uint8_t id, uint8_t newID, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
       /** 
@@ -1125,7 +1118,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetHighestLimitTemperature(unsigned char id, unsigned char temperature, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetHighestLimitTemperature(uint8_t id, uint8_t temperature, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
 
@@ -1157,7 +1150,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetBaudRate(unsigned char id, unsigned char baudrate, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetBaudRate(uint8_t id, uint8_t baudrate, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
       /** 
@@ -1189,7 +1182,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetLowestLimitVoltage(unsigned char id, unsigned char voltage, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetLowestLimitVoltage(uint8_t id, uint8_t voltage, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1220,7 +1213,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetHighestLimitVoltage(unsigned char id, unsigned char voltage, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetHighestLimitVoltage(uint8_t id, uint8_t voltage, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1264,7 +1257,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetAlarmShutdownFlag(unsigned char id, unsigned char flag, int mask=0x7F,  int timeout=DEFAULT_RESPONSE_TIME);
+      void SetAlarmShutdownFlag(uint8_t id, uint8_t flag, int32_t mask=0x7F,  int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1307,7 +1300,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetAlarmLEDFlag(unsigned char id, unsigned char flag, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetAlarmLEDFlag(uint8_t id, uint8_t flag, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1318,7 +1311,7 @@ namespace ssr {
        *
        * <BR />
        * ex: <BR />
-       * >> unsigned char buf = GetAlarmShutdownFlag(0);<BR />
+       * >> uint8_t buf = GetAlarmShutdownFlag(0);<BR />
        * >> if (buf & OVERLOAD_ERROR_FLAG) { <BR />
        * >> // 過負荷、温度範囲外と設定値範囲外の場合に自動的にトルクオフならば
        *
@@ -1352,7 +1345,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned char GetAlarmShutdownFlag(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      uint8_t GetAlarmShutdownFlag(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
       /** 
        * @if jp
@@ -1363,7 +1356,7 @@ namespace ssr {
        *
        * <BR />
        * ex: <BR />
-       * >> unsigned char buf = GetAlarmShutdownFlag(0);<BR />
+       * >> uint8_t buf = GetAlarmShutdownFlag(0);<BR />
        * >> if (buf & OVERLOAD_ERROR_FLAG) { <BR />
        * >> // 過負荷、温度範囲外と設定値範囲外の場合に自動的にLED点灯ならば
        *
@@ -1397,7 +1390,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      unsigned char  GetAlarmLEDFlag(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      uint8_t  GetAlarmLEDFlag(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
 
@@ -1428,7 +1421,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetComplianceSlope(unsigned char id, unsigned char slope,  int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetComplianceSlope(uint8_t id, uint8_t slope,  int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
 
@@ -1459,7 +1452,7 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetComplianceMargin(unsigned char id, unsigned char margin, int mask=0x7F,  int timeout=DEFAULT_RESPONSE_TIME);
+      void SetComplianceMargin(uint8_t id, uint8_t margin, int32_t mask=0x7F,  int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
 
@@ -1490,10 +1483,10 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void SetPunch(unsigned char id, unsigned short punch,  int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void SetPunch(uint8_t id, uint16_t punch,  int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
-      void TorqueEnable(unsigned char id, int mask=0x7F, int timeout=DEFAULT_RESPONSE_TIME);
+      void TorqueEnable(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
     };
 
@@ -1513,12 +1506,15 @@ namespace ssr {
 #define ADDRESS_STATUS_RET_LEVEL  16  //B
 #define ADDRESS_ALARM_LED	      17
 #define ADDRESS_ALARM_SHUTDOWN    18
+
 #define ADDRESS_TORQUE_ENABLE     24  //B
 #define ADDRESS_LED               25  //B
+
 #define ADDRESS_CW_COMP_MARGIN    26  //B
 #define ADDRESS_CCW_COMP_MARGIN   27  //B
 #define ADDRESS_CW_COMP_SLOPE     28  //B
 #define ADDRESS_CCW_COMP_SLOPE    29  //B
+
 #define ADDRESS_GOAL_POSITION     30  //W
 #define ADDRESS_GOAL_SPEED        32  //W
 #define ADDRESS_TORQUE_LIMIT      34  //W

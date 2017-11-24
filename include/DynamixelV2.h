@@ -95,7 +95,7 @@ namespace ssr {
   static const uint16_t ADDRESS_VELOCITY_TRAJECTORY = 136;
   static const uint16_t ADDRESS_POSITION_TRAJECTORY = 140;
   static const uint16_t ADDRESS_PRESENT_INPUT_VOLTAGE = 144;
-  static const uint16_t ADDRESS_PRESENT_TEMPELATURE = 146;
+  static const uint16_t ADDRESS_PRESENT_TEMPERATURE = 146;
   static const uint16_t ADDRESS_EXTERNAL_PORT_DATA1 = 152;
   static const uint16_t ADDRESS_EXTERNAL_PORT_DATA2 = 154;
   static const uint16_t ADDRESS_EXTERNAL_PORT_DATA3 = 156;
@@ -314,7 +314,80 @@ namespace ssr {
 			  int32_t mask,
 			  int32_t timeout);
 		
+      template<typename T>
+	void WriteData(uint8_t id, uint16_t adr, T dat, int32_t timeout) {
+	uint8_t param[2 + sizeof(T)];
+	uint8_t rbuf[10];
+	param[0] = adr & 0x00FF;
+	param[1] = (adr >> 8) & 0x00FF;
+	
+	for(uint32_t i = 0;i < sizeof(T);i++) {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	  param[2 + i] = (dat >> (i*8)) & 0xff;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	  param[2 + sizeof(T)-1 + i] = (dat >> (i*8)) & 0xff;
+#endif
+	}
+	
+	ssr::MutexBinder m(m_Mutex);
+	
+	int32_t i = 0;
+	int32_t l1;
+	uint8_t mask = 0;
+      write_word_data_try:
+	try {
+	  WritePacket (id, INST_WRITE, param, 2 + sizeof(T));
+	  if(id != BROADCASTING_ID)
+	    ReceivePacket (rbuf, &l1, mask, timeout);
+	} catch (TimeOutException &e) {
+	  i++;
+	  if(i < DYNAMIXEL_RECEIVEPACKET_TRYCYCLE) {
+	    goto write_word_data_try;
+	  } else {
+	    throw e;
+	  }
+	}
+      }
 			
+      template<typename T> void ReadData(uint8_t id, uint16_t adr, T* result, int32_t timeout) {
+	int32_t             l1;
+	uint8_t           param[3];
+	uint8_t           rbuf[10];
+	
+	if (id == BROADCASTING_ID) {
+	  throw new WrongArgException();
+	}
+	
+	ssr::MutexBinder m(m_Mutex);
+	param[0] = adr & 0x00FF;
+	param[1] = (adr >> 8) & 0x00ff;
+	param[2] = sizeof(T);
+	int32_t i = 0;
+	uint8_t mask = 0;
+      read_word_data_try:
+	try {
+	  WritePacket (id, INST_READ, param, 3);
+	  ReceivePacket (rbuf, &l1, mask, timeout);
+	} catch (TimeOutException &e) {
+	  i++;
+	  if(i < DYNAMIXEL_RECEIVEPACKET_TRYCYCLE) {
+	    goto read_word_data_try;
+	  } else { 
+	    throw e;
+	  }
+	}
+	
+	*result = 0;
+	for(uint32_t j = 0;j < sizeof(T);j++) {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	  *result |= rbuf[7+i + sizeof(T)-1];
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	  *result |= rbuf[7+i];
+#endif
+	}
+      }
+
+
       /** 
        * @if jp
        * @brief
@@ -600,8 +673,11 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      uint16_t GetCurrentPosition (uint8_t id,
-					 int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME) ;
+      int32_t GetCurrentPosition (uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+	int32_t result;
+	ReadData<int32_t>(id, ADDRESS_PRESENT_POSITION, &result, timeout);
+	return result;
+      }
 
       /** 
        * @if jp
@@ -822,7 +898,11 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      uint16_t GetCurrentTemperature(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
+      uint16_t GetCurrentTemperature(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+	uint16_t result;
+	ReadData<uint16_t>(id, ADDRESS_PRESENT_TEMPERATURE, &result, timeout);
+	return result;
+      }
 
       /** 
        * @if jp
@@ -882,7 +962,8 @@ namespace ssr {
        * @exception ssr::dynamixel::RangeException
        */
       void SetLED(uint8_t id, int32_t flag = true, int32_t timeout=DEFAULT_RESPONSE_TIME) {
-	WriteByteData(id, ADDRESS_LED, flag ? 1 : 0, 0, timeout);
+	//	WriteByteData(id, ADDRESS_LED, flag ? 1 : 0, 0, timeout);
+	WriteData<uint8_t>(id, ADDRESS_LED, flag ? 1: 0, timeout);
       }
 
 
@@ -1509,7 +1590,21 @@ namespace ssr {
       void SetPunch(uint8_t id, uint16_t punch,  int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
 
 
-      void TorqueEnable(uint8_t id, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
+      void TorqueEnable(uint8_t id, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	WriteData<uint8_t>(id, ADDRESS_TORQUE_ENABLE, 1, timeout);
+      }
+
+      void TorqueDisable(uint8_t id, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	WriteData<uint8_t>(id, ADDRESS_TORQUE_ENABLE, 0, timeout);
+      }
+
+      void SetProfileAcceleration(uint8_t id, uint32_t acc, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	WriteData<uint32_t>(id, ADDRESS_PROFILE_ACCELERATION, acc, timeout);
+      }
+
+      void SetProfileVelocity(uint8_t id, uint32_t vel, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	WriteData<uint32_t>(id, ADDRESS_PROFILE_VELOCITY, vel, timeout);
+      }
 
     };
 

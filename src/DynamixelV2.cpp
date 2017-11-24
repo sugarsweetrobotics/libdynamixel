@@ -339,6 +339,7 @@ void DynamixelV2::ReadWordData (uint8_t id, uint8_t adr, uint16_t *result, int32
 
 
 
+
 void DynamixelV2::WriteWordData (uint8_t id, uint8_t adr, uint16_t dat, int32_t mask, int32_t timeout)
 {
   int32_t             l1;
@@ -423,14 +424,6 @@ uint16_t DynamixelV2::GetModelNumber (uint8_t id, int32_t mask,
   return result;
 }
 
-
-*/
-uint16_t DynamixelV2::GetCurrentPosition (uint8_t id, int32_t mask, int32_t timeout) {
-  uint16_t  result;
-  ReadWordData(id, ADDRESS_PRESENT_POSITION, &result, mask, timeout);
-  return result;
-}
-/*
 uint16_t DynamixelV2::GetTargetPosition (uint8_t id, int32_t mask, int32_t timeout) {
   uint16_t  result;
 
@@ -597,11 +590,6 @@ void DynamixelV2::SetComplianceMargin(uint8_t id, uint8_t margin,  int32_t mask,
 void DynamixelV2::SetPunch(uint8_t id, uint16_t punch,  int32_t mask, int32_t timeout)
 {
   WriteWordData(id, ADDRESS_PUNCH, punch, mask, timeout);
-}
-
-void DynamixelV2::TorqueEnable(uint8_t id, int32_t mask, int32_t timeout)
-{p
-  WriteByteData(id, ADDRESS_TORQUE_ENABLE, 1, mask, timeout);
 }
 
 */

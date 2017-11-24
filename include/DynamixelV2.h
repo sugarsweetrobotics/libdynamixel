@@ -341,7 +341,7 @@ namespace ssr {
        * @exception revast::dynamixel::RangeException
        */
       void WriteByteData (uint8_t id,
-			  uint8_t adr, 
+			  uint16_t adr, 
 			  uint8_t dat, 
 			  int32_t mask,
 			  int32_t timeout);

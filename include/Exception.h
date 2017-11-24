@@ -325,6 +325,17 @@ namespace ssr {
       }
     };
 
+
+    class ReceivedCRCException : public DynamixelException {
+    public:
+      ReceivedCRCException(void) {}
+      virtual ~ReceivedCRCException() throw() {}
+    public:
+      const char* what() const throw() {
+	return "CRC Error for Received Packet";
+      }
+    };
+
     class ResultFailException : public DynamixelException {
     public:
       ResultFailException(void) {}

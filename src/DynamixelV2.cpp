@@ -7,6 +7,7 @@
  * copyright Revast Co., Ltd. 2010 all rights reserved.
  ***************************************************/
 
+#include <iostream>
 #include "DynamixelV2.h"
 
 using namespace ssr;
@@ -41,6 +42,7 @@ void DynamixelV2::WritePacket (uint8_t cID, TInstruction cInst,  uint8_t *pParam
   buf[6] = 0;
   buf[7] = cInst; // Instruction code.
 
+
   pattern[2] = cInst;
 
   for (int32_t i = 0; i < iLength; i++) { // setting parameter.
@@ -57,25 +59,37 @@ void DynamixelV2::WritePacket (uint8_t cID, TInstruction cInst,  uint8_t *pParam
     }
   }
 
-  uint16_t crc = update_crc(0, buf, length+5);
+  length += 1; // for inst
   length += 2; // FOR CRC
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
   buf[5] = (uint8_t)(length & 0x00FF);
   buf[6] = (uint8_t)((length >> 8) & 0x00FF);
-  buf[8+length-2] = (uint8_t)(crc & 0x00FF);
-  buf[8+length-2+1] = (uint8_t)((crc >> 8) & 0x00FF);
 #elif __BYTE_ORDER == __BIG_ENDIAN
   buf[6] = (uint8_t)(length & 0x00FF);
   buf[5] = (uint8_t)((length & 0xFF00) >> 8);
-  buf[8+length-2+1] = (uint8_t)(crc & 0x00FF);
-  buf[8+length-2] = (uint8_t)((crc >> 8) & 0x00FF);
 #endif
 
+  uint16_t crc = update_crc(0, buf, length+5);
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+  buf[7+length-2] = (uint8_t)(crc & 0x00FF);
+  buf[7+length-2+1] = (uint8_t)((crc >> 8) & 0x00FF);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+  buf[7+length-2+1] = (uint8_t)(crc & 0x00FF);
+  buf[7+length-2] = (uint8_t)((crc >> 8) & 0x00FF);
+#endif
+
+
+  for(int i = 0;i < 7+length;i++) {
+    std::cout << (int)buf[i] << " ";
+  }
+  
   m_SerialPort.FlushRxBuffer();
   wlen = m_SerialPort.Write(buf, 7+length);
 
-  if(wlen != iLength+7) {
+  //  std::cout << "Written = " << wlen << "/" << 7 + length << std::endl;
+  if(wlen != length+7) {
     throw WritePacketException();
   }
 }
@@ -95,7 +109,9 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
+
       if(m_SerialPort.Read(pRcv, 1) != 1) throw ReceivePacketException();
+      //      std::cout << (int)pRcv[0] << std::endl;
       if (pRcv[0] == PACKET_HEADER_FIXED_VALUE0) break;
     }
     m_Timer.tack(&time);
@@ -105,6 +121,7 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
       if(m_SerialPort.Read(pRcv+1, 1) != 1) throw ReceivePacketException();
+      //      std::cout << (int)pRcv[1] << std::endl;
       if (pRcv[1] == PACKET_HEADER_FIXED_VALUE1) break;
     }
     m_Timer.tack(&time);
@@ -114,12 +131,11 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
       if(m_SerialPort.Read(pRcv+2, 1) != 1) throw ReceivePacketException();
-      if (pRcv[1] == PACKET_HEADER_FIXED_VALUE2) break;
+      if (pRcv[2] == PACKET_HEADER_FIXED_VALUE2) break;
     }
     m_Timer.tack(&time);
     if (time.getUsec() > timeout * 1000) throw TimeOutException();
   }
-
 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
@@ -129,7 +145,9 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     m_Timer.tack(&time);
     if (time.getUsec() > timeout * 1000) throw TimeOutException();
   }
-  
+
+  //  std::cout << "Header Detected" << std::endl;
+
   *pLength = PACKET_HEADER_SIZE;
 
   uint8_t id = 0;
@@ -138,6 +156,7 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
       if(m_SerialPort.Read(pRcv+4, 1) != 1) throw ReceivePacketException();
       id = pRcv[4];
+      std::cout << "id = " << (int)id << std::endl;
       break;
     }
     
@@ -156,6 +175,7 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
       length = pRcv[5];
       length = (length << 8) | pRcv[6];
 #endif
+      std::cout << "length = "<< length << std::endl;
       break;
     }
     
@@ -173,6 +193,11 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     if (time.getUsec() > timeout*1000) throw TimeOutException();
   }
 
+  for(int i = 0;i < length;i++) {
+    std::cout << (int)pRcv[7+i] << " ";
+  }
+  
+
   uint16_t crc_low = pRcv[5+length];
   uint16_t crc_high = pRcv[5+length+1];
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -185,6 +210,9 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   if(error & STATUS_ERROR_ALERT_FLAG) {
     uint8_t buffer[16];
     ReadByteData(id, ADDRESS_HARDWARE_ERROR_STATUS, buffer, mask, timeout);
+
+    //TODO: Do something
+
     
   } else {
     switch(error & STATUS_ERROR_NUMBER_MASK) {
@@ -193,6 +221,7 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     case STATUS_ERROR_NUMBER_INSTRUCTION_ERROR:
       throw InstructionException();
     case STATUS_ERROR_NUMBER_CRC_ERROR:
+      std::cout << "crc error returned" << std::endl;
       throw CRCException();
     case STATUS_ERROR_NUMBER_DATA_RANGE_ERROR:
       throw RangeException();
@@ -210,26 +239,27 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   }
 
   if(update_crc(0, pRcv, length+5) != crc) {
-    throw CRCException();
+    throw ReceivedCRCException();
   }
   
 }
 
 
-void DynamixelV2::WriteByteData (uint8_t id, uint8_t adr, uint8_t dat, int32_t mask, int32_t timeout) {
+void DynamixelV2::WriteByteData (uint8_t id, uint16_t adr, uint8_t dat, int32_t mask, int32_t timeout) {
   int32_t l1;
   uint8_t param[10];
   uint8_t rbuf[10];
 
-  param[0] = adr;
-  param[1] = dat;
+  param[0] = adr & 0x00FF;
+  param[1] = ((adr & 0xFF00) >> 8);
+  param[2] = dat;
 
   ssr::MutexBinder m(m_Mutex);
 
   int32_t i = 0;
  write_byte_data_try:
   try {
-    WritePacket (id, INST_WRITE, param, 2);
+    WritePacket (id, INST_WRITE, param, 3);
     if (id != BROADCASTING_ID) 
       ReceivePacket (rbuf, &l1, mask, timeout);
   } catch (TimeOutException &e) {
@@ -315,13 +345,14 @@ void DynamixelV2::WriteWordData (uint8_t id, uint8_t adr, uint16_t dat, int32_t 
   uint8_t           param[10];
   uint8_t           rbuf[10];
 
-  param[0] = adr;
+  param[0] = adr & 0x00FF;
+  param[1] = (adr >> 8) & 0x00FF;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-  param[1] = dat & 0xff;
-  param[2] = dat >> 8;
-#elif __BYTE_ORDER == __BIG_ENDIAN
   param[2] = dat & 0xff;
-  param[1] = dat >> 8;
+  param[3] = dat >> 8;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+  param[3] = dat & 0xff;
+  param[2] = dat >> 8;
 #endif
 
   ssr::MutexBinder m(m_Mutex);
@@ -329,7 +360,7 @@ void DynamixelV2::WriteWordData (uint8_t id, uint8_t adr, uint16_t dat, int32_t 
   int32_t i = 0;
  write_word_data_try:
   try {
-    WritePacket (id, INST_WRITE, param, 3);
+    WritePacket (id, INST_WRITE, param, 4);
     if(id != BROADCASTING_ID)
       ReceivePacket (rbuf, &l1, mask, timeout);
   } catch (TimeOutException &e) {
@@ -393,13 +424,13 @@ uint16_t DynamixelV2::GetModelNumber (uint8_t id, int32_t mask,
 }
 
 
-
+*/
 uint16_t DynamixelV2::GetCurrentPosition (uint8_t id, int32_t mask, int32_t timeout) {
   uint16_t  result;
   ReadWordData(id, ADDRESS_PRESENT_POSITION, &result, mask, timeout);
   return result;
 }
-
+/*
 uint16_t DynamixelV2::GetTargetPosition (uint8_t id, int32_t mask, int32_t timeout) {
   uint16_t  result;
 

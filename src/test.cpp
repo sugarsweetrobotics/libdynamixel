@@ -6,7 +6,7 @@
 using namespace ssr::dynamixel;
 
 int main(const int argc, const char* argv[]) {
-  if (argc != 4) {
+  if (argc != 5) {
     std::cout << "Invalid Usage." << std::endl;
     std::cout << "USAGE: $./test filename baudrate id led" << std::endl;
     return -1;

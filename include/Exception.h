@@ -386,6 +386,26 @@ namespace ssr {
       }
     };
 
+    
+    class EncoderException : public DynamixelException {
+    public:
+      EncoderException(void) {}
+      virtual ~EncoderException(void) throw() {}
+    public:
+      const char* what() const throw() {
+	return "Encoder Error";
+      }
+    };
+
+    class ElectricshockException : public DynamixelException {
+    public:
+      ElectricshockException(void) {}
+      virtual ~ElectricshockException(void) throw() {}
+    public:
+      const char* what() const throw() {
+	return "Electricshock Error";
+      }
+    };
 
     
   }

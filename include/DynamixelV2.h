@@ -11,12 +11,12 @@
 
 #ifdef WIN32
 // 以下の ifdef ブロックは DLL からのエクスポートを容易にするマクロを作成するための 
-// 一般的な方法です。この DLL 内のすべてのファイルは、コマンド ラインで定義された LIBREVAST_EXPORTS
+// 一般的な方法です。この DLL 内のすべてのファイルは、コマンド ラインで定義された LIBDYNAMIXEL_EXPORTS
 // シンボルでコンパイルされます。このシンボルは、この DLL を使うプロジェクトで定義することはできません。
 // ソースファイルがこのファイルを含んでいる他のプロジェクトは、 
 // LIBDXL_API 関数を DLL からインポートされたと見なすのに対し、この DLL は、このマクロで定義された
 // シンボルをエクスポートされたと見なします。
-#ifdef LIBDINAMIXEL_EXPORTS
+#ifdef LIBDYNAMIXEL_EXPORTS
 #define LIBDXL_API __declspec(dllexport)
 #else
 #define LIBDXL_API __declspec(dllimport)
@@ -27,6 +27,9 @@
 
 #endif // ifdef WIN32
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "Exception.h"
 
 #include "SerialPort.h"
@@ -34,6 +37,21 @@
 
 namespace ssr {
   namespace dynamixel {
+
+    template<typename T> T unmarshall(const uint8_t* buf) {
+      T result = 0;
+	for(uint32_t j = 0;j < sizeof(T);j++) {
+	  result = result << 8;
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+	  result |= buf[sizeof(T)-1-j];
+#elif __BYTE_ORDER == __BIG_ENDIAN
+	  result |= buf[j];
+#endif
+	}
+	return result;
+    }
+
+    
 
   static const uint16_t ADDRESS_MODEL_NUMBER = 0;   //W
   static const uint16_t ADDRESS_MODEL_INFO   = 2;
@@ -106,6 +124,11 @@ namespace ssr {
   static const uint16_t ADDRESS_INDIRECT_ADDRESS29_OFFSET = 578;
   static const uint16_t ADDRESS_INDIRECT_DATA29_OFFSET = 634;
 
+  static const uint8_t HARDWARE_OVERLOAD_ERROR_FLAG = 0x20;
+  static const uint8_t HARDWARE_ELECTRICSHOCK_ERROR_FLAG = 0x10;
+  static const uint8_t HARDWARE_ENCODER_ERROR_FLAG = 0x08;
+  static const uint8_t HARDWARE_OVERHEAT_ERROR_FLAG = 0x04;
+  static const uint8_t HARDWARE_INPUTVOLTAGE_ERROR_FLAG = 0x01;
 
     /** 
      * @if jp
@@ -314,10 +337,9 @@ namespace ssr {
 			  int32_t mask,
 			  int32_t timeout);
 		
-      template<typename T>
-	void WriteData(uint8_t id, uint16_t adr, T dat, int32_t timeout) {
+      template<typename T> void WriteData(uint8_t id, uint16_t adr, T dat, int32_t timeout) {
 	uint8_t param[2 + sizeof(T)];
-	uint8_t rbuf[10];
+	uint8_t rbuf[256];
 	param[0] = adr & 0x00FF;
 	param[1] = (adr >> 8) & 0x00FF;
 	
@@ -348,10 +370,16 @@ namespace ssr {
 	  }
 	}
       }
-			
+      
+
+
+
       template<typename T> void ReadData(uint8_t id, uint16_t adr, T* result, int32_t timeout) {
+	uint8_t rbuf[64];
+	ReadData(id, adr, rbuf, sizeof(T), timeout);
+	/*
 	int32_t             l1;
-	uint8_t           param[3];
+	uint8_t           param[4];
 	uint8_t           rbuf[10];
 	
 	if (id == BROADCASTING_ID) {
@@ -362,11 +390,12 @@ namespace ssr {
 	param[0] = adr & 0x00FF;
 	param[1] = (adr >> 8) & 0x00ff;
 	param[2] = sizeof(T);
+	param[3] = (sizeof(T) >> 8) & 0x00ff;
 	int32_t i = 0;
 	uint8_t mask = 0;
       read_word_data_try:
 	try {
-	  WritePacket (id, INST_READ, param, 3);
+	  WritePacket (id, INST_READ, param, 4);
 	  ReceivePacket (rbuf, &l1, mask, timeout);
 	} catch (TimeOutException &e) {
 	  i++;
@@ -376,18 +405,50 @@ namespace ssr {
 	    throw e;
 	  }
 	}
-	
+	*/
+	/*
 	*result = 0;
 	for(uint32_t j = 0;j < sizeof(T);j++) {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-	  *result |= rbuf[7+i + sizeof(T)-1];
+	  *result |= rbuf[7+j + sizeof(T)-1];
 #elif __BYTE_ORDER == __BIG_ENDIAN
-	  *result |= rbuf[7+i];
+	  *result |= rbuf[7+j];
 #endif
-	}
+}*/
+	*result = unmarshall<T>(rbuf+9);
       }
 
-
+      void ReadData(uint8_t id, uint16_t adr, uint8_t* buf, uint32_t size, int32_t timeout) {
+	int32_t             l1;
+	uint8_t           param[4];
+	uint8_t           rbuf[10];
+	
+	if (id == BROADCASTING_ID) {
+	  throw new WrongArgException();
+	}
+	
+	ssr::MutexBinder m(m_Mutex);
+	param[0] = adr & 0x00FF;
+	param[1] = (adr >> 8) & 0x00ff;
+	param[2] = size & 0x00FF;
+	param[3] = (size >> 8) & 0x00FF;
+	int32_t i = 0;
+	uint8_t mask = 0;
+      read_word_data_try:
+	try {
+	  WritePacket (id, INST_READ, param, 4);
+	  ReceivePacket (buf, &l1, mask, timeout);
+	} catch (TimeOutException &e) {
+	  i++;
+	  if(i < DYNAMIXEL_RECEIVEPACKET_TRYCYCLE) {
+	    goto read_word_data_try;
+	  } else { 
+	    throw e;
+	  }
+	}
+      }
+      
+      
       /** 
        * @if jp
        * @brief
@@ -605,7 +666,9 @@ namespace ssr {
        * @exception ssr::dynamixel::OverloadException
        * @exception ssr::dynamixel::RangeException
        */
-      void MovePosition (uint8_t id, uint16_t position, int32_t mask=0x7F, int32_t timeout=DEFAULT_RESPONSE_TIME);
+      void MovePosition (uint8_t id, int32_t position, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	WriteData<int32_t>(id, ADDRESS_GOAL_POSITION, position, timeout);
+      }
 
 
       /** 
@@ -1608,9 +1671,39 @@ namespace ssr {
 
     };
 
+    inline double pos_to_rad(int32_t pos) {
+      return pos * 2 * M_PI / 4096;
+    }
+    
+    inline int32_t rad_to_pos(double rad) {
+      return rad * 4096 / 2 / M_PI;
+    }
+
+    inline double vel_to_rpm(int32_t vel) {
+      return vel * 0.229;
+    }
+
+    inline int32_t rpm_to_vel(double& rpm) {
+      return rpm / 0.229;
+    }
+
+    inline double rpm_to_rad_per_sec(double& rpm) {
+      return rpm  * M_PI * 2 / 60;
+    }
+
+    inline double rad_per_sec_to_rpm(double& rad) {
+      return rad * 60 / 2 / M_PI;
+    }
+
+    inline double acc_to_rpm2(int32_t acc) {
+      return acc * 60 * 60 / 2 / M_PI;
+    }
+
+    inline int32_t rpm2_to_acc(double rpm2) {
+      return rpm2 * M_PI * 2 / 60 / 60;
+    }
+
+
   }
-
-
-
   
 }

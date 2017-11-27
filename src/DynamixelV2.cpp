@@ -12,6 +12,24 @@
 
 using namespace ssr;
 using namespace ssr::dynamixel;
+//#define DEBUG
+
+
+#ifndef DEBUG
+#define debug( fmt, ... ) ((void)0)
+#define dput(fmt, ...) ((void)0)
+#else 
+
+#include <stdio.h>
+#define debug( fmt, ... ) \
+  fprintf( stderr, "%s:%u # " fmt "\n", \
+	   __FILE__, __LINE__, ##__VA_ARGS__ )
+
+#define dputd(fmt, v) \
+  fprintf(stderr, fmt , v)
+#endif
+
+
 
 static uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
@@ -80,15 +98,18 @@ void DynamixelV2::WritePacket (uint8_t cID, TInstruction cInst,  uint8_t *pParam
   buf[7+length-2] = (uint8_t)((crc >> 8) & 0x00FF);
 #endif
 
-
+  
+#ifdef DEBUG
+  std::cout << "WritePacket(";
   for(int i = 0;i < 7+length;i++) {
     std::cout << (int)buf[i] << " ";
   }
-  
+  std::cout << ")" << std::endl;
+#endif
+
   m_SerialPort.FlushRxBuffer();
   wlen = m_SerialPort.Write(buf, 7+length);
 
-  //  std::cout << "Written = " << wlen << "/" << 7 + length << std::endl;
   if(wlen != length+7) {
     throw WritePacketException();
   }
@@ -99,7 +120,7 @@ void DynamixelV2::WritePacket (uint8_t cID, TInstruction cInst,  uint8_t *pParam
 void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, int32_t timeout /* [ms] */)
 {
   int32_t ind;
-  uint8_t           sum;
+  uint8_t sum;
   uint8_t dataLength;
   TimeSpec time;
   *pLength = 0;
@@ -107,11 +128,13 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   // Wait for receive header 4 bytes.
   m_Timer.tick();
 
+#ifdef DEBUG
+  std::cout << "ReceivePacket:";
+#endif
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
 
       if(m_SerialPort.Read(pRcv, 1) != 1) throw ReceivePacketException();
-      //      std::cout << (int)pRcv[0] << std::endl;
       if (pRcv[0] == PACKET_HEADER_FIXED_VALUE0) break;
     }
     m_Timer.tack(&time);
@@ -121,7 +144,6 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
       if(m_SerialPort.Read(pRcv+1, 1) != 1) throw ReceivePacketException();
-      //      std::cout << (int)pRcv[1] << std::endl;
       if (pRcv[1] == PACKET_HEADER_FIXED_VALUE1) break;
     }
     m_Timer.tack(&time);
@@ -145,18 +167,17 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     m_Timer.tack(&time);
     if (time.getUsec() > timeout * 1000) throw TimeOutException();
   }
-
-  //  std::cout << "Header Detected" << std::endl;
+#ifdef DEBUG
+  std::cout << "Header Detected: " << std::endl;
+#endif
 
   *pLength = PACKET_HEADER_SIZE;
 
   uint8_t id = 0;
-  // Waiting for receiving data.
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= 1) {
       if(m_SerialPort.Read(pRcv+4, 1) != 1) throw ReceivePacketException();
       id = pRcv[4];
-      std::cout << "id = " << (int)id << std::endl;
       break;
     }
     
@@ -169,19 +190,22 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     if (m_SerialPort.GetSizeInRxBuffer() >= 2) {
       if(m_SerialPort.Read(pRcv+5, 2) != 2) throw ReceivePacketException();
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-      length = pRcv[6];
-      length = (length << 8) | pRcv[5];
+      length = (((uint16_t)pRcv[6])<< 8) | pRcv[5];
+
 #elif __BYTE_ORDER == __BIG_ENDIAN
       length = pRcv[5];
       length = (length << 8) | pRcv[6];
 #endif
-      std::cout << "length = "<< length << std::endl;
       break;
     }
-    
+
+
     m_Timer.tack(&time);
     if (time.getUsec() > timeout*1000) throw TimeOutException();
   }
+#ifdef DEBUG
+  std::cout << "id=" << (int)id << ", length=" << (int)length << ", ";
+#endif
 
   while (1) {
     if (m_SerialPort.GetSizeInRxBuffer() >= length) {
@@ -193,10 +217,12 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
     if (time.getUsec() > timeout*1000) throw TimeOutException();
   }
 
+#ifdef DEBUG
   for(int i = 0;i < length;i++) {
-    std::cout << (int)pRcv[7+i] << " ";
+     std::cout << (int)(pRcv[7 + i]) << " ";
   }
-  
+  std::cout << ")" << std::endl;;
+#endif
 
   uint16_t crc_low = pRcv[5+length];
   uint16_t crc_high = pRcv[5+length+1];
@@ -207,36 +233,45 @@ void DynamixelV2::ReceivePacket (uint8_t *pRcv, int32_t *pLength, int32_t mask, 
 #endif
 
   uint8_t error = pRcv[8];
-  if(error & STATUS_ERROR_ALERT_FLAG) {
-    uint8_t buffer[16];
-    ReadByteData(id, ADDRESS_HARDWARE_ERROR_STATUS, buffer, mask, timeout);
 
-    //TODO: Do something
-
-    
-  } else {
-    switch(error & STATUS_ERROR_NUMBER_MASK) {
-    case STATUS_ERROR_NUMBER_RESULT_FAIL:
-      throw ResultFailException();
-    case STATUS_ERROR_NUMBER_INSTRUCTION_ERROR:
-      throw InstructionException();
-    case STATUS_ERROR_NUMBER_CRC_ERROR:
-      std::cout << "crc error returned" << std::endl;
-      throw CRCException();
-    case STATUS_ERROR_NUMBER_DATA_RANGE_ERROR:
-      throw RangeException();
-    case STATUS_ERROR_NUMBER_DATA_LENGTH_ERROR:
-      throw LengthException();
-    case STATUS_ERROR_NUMBER_DATA_LIMIT_ERROR:
-      throw LimitException();
-    case STATUS_ERROR_NUMBER_ACCESS_ERROR:
-      throw AccessException();
-    case 0:
-      break;
-    default:
-      throw UnknownException();
-    }
+  switch(error & STATUS_ERROR_NUMBER_MASK) {
+  case STATUS_ERROR_NUMBER_RESULT_FAIL:
+    throw ResultFailException();
+  case STATUS_ERROR_NUMBER_INSTRUCTION_ERROR:
+    throw InstructionException();
+  case STATUS_ERROR_NUMBER_CRC_ERROR:
+#ifdef DEBUG
+    std::cout << "crc error returned" << std::endl;
+#endif
+    throw CRCException();
+  case STATUS_ERROR_NUMBER_DATA_RANGE_ERROR:
+    throw RangeException();
+  case STATUS_ERROR_NUMBER_DATA_LENGTH_ERROR:
+    throw LengthException();
+  case STATUS_ERROR_NUMBER_DATA_LIMIT_ERROR:
+    throw LimitException();
+  case STATUS_ERROR_NUMBER_ACCESS_ERROR:
+    throw AccessException();
+  case 0:
+    break;
+  default:
+    throw UnknownException();
   }
+
+
+  if(error & STATUS_ERROR_ALERT_FLAG) {
+    uint8_t buffer;
+    //ReadByteData(id, ADDRESS_HARDWARE_ERROR_STATUS, buffer, mask, timeout);
+    ReadData<uint8_t>(id, ADDRESS_HARDWARE_ERROR_STATUS, &buffer, timeout);
+    //TODO: Do something
+    if (buffer & HARDWARE_INPUTVOLTAGE_ERROR_FLAG) throw InputVoltageException();
+    else if (buffer & HARDWARE_OVERHEAT_ERROR_FLAG) throw OverheatingException();
+    else if (buffer & HARDWARE_ENCODER_ERROR_FLAG) throw EncoderException();
+    else if (buffer & HARDWARE_ELECTRICSHOCK_ERROR_FLAG) throw ElectricshockException();
+    else if (buffer & HARDWARE_OVERLOAD_ERROR_FLAG) throw OverloadException();
+
+  } 
+
 
   if(update_crc(0, pRcv, length+5) != crc) {
     throw ReceivedCRCException();

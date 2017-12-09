@@ -16,10 +16,15 @@
 // ソースファイルがこのファイルを含んでいる他のプロジェクトは、 
 // LIBDXL_API 関数を DLL からインポートされたと見なすのに対し、この DLL は、このマクロで定義された
 // シンボルをエクスポートされたと見なします。
-#ifdef LIBDYNAMIXEL_EXPORTS
+#ifdef dynamixel_EXPORTS
 #define LIBDXL_API __declspec(dllexport)
 #else
+#ifdef EXPORT_dynamixel_STATIC
+#define LIBDXL_API 
+#else
 #define LIBDXL_API __declspec(dllimport)
+#endif 
+
 #endif
 
 #else // ifdef WIN32

@@ -130,6 +130,14 @@ namespace ssr {
   static const uint8_t HARDWARE_OVERHEAT_ERROR_FLAG = 0x04;
   static const uint8_t HARDWARE_INPUTVOLTAGE_ERROR_FLAG = 0x01;
 
+  static const uint8_t MOVINGSTATUS_INPOSITION = 0x01;
+  static const uint8_t MOVINGSTATUS_PROFILEONGOING = 0x02;
+  static const uint8_t MOVINGSTATUS_FOLLOWINGERROR = 0x04;
+  static const uint8_t MOVINGSTATUS_PROFILETYPE_MASK = 0x30;
+  static const uint8_t MOVINGSTATUS_STEPSPEEDPROFILE = 0x00;
+  static const uint8_t MOVINGSTATUS_RECTANGULARPROFILE = 0x10;
+  static const uint8_t MOVINGSTATUS_TRIANGULARPROFILE = 0x20;
+  static const uint8_t MOVINGSTATUS_TRAPEZOIDALPROFILE = 0x30;
     /** 
      * @if jp
      * @brief Dynamixelモータの同期制御に使う構造体
@@ -1669,6 +1677,17 @@ namespace ssr {
 	WriteData<uint32_t>(id, ADDRESS_PROFILE_VELOCITY, vel, timeout);
       }
 
+      uint8_t GetMovingStatus(uint8_t id, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	uint8_t result;
+	ReadData<uint8_t>(id, ADDRESS_MOVING_STATUS, &result, timeout);
+	return result;
+      }
+
+      uint32_t GetVelocityLimit(uint8_t id, int32_t timeout=DEFAULT_RESPONSE_TIME) {
+	uint32_t result;
+	ReadData<uint32_t>(id, ADDRESS_VELOCITY_LIMIT, &result, timeout);
+	return result;
+      }
     };
 
     inline double pos_to_rad(int32_t pos) {

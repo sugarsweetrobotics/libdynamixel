@@ -1711,6 +1711,9 @@ namespace ssr {
 	  }
 
 
+    short GetCurrentCurrent(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
+
+    void SetTargetCurrent(uint8_t id, short digit, int32_t timeout = DEFAULT_RESPONSE_TIME);
     };
 
 	

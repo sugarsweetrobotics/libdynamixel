@@ -629,6 +629,22 @@ void DynamixelV2::SetPunch(uint8_t id, uint16_t punch,  int32_t mask, int32_t ti
 
 */
 
+void DynamixelV2::SetTargetCurrent(uint8_t id, short digit, int32_t timeout) {
+
+}
+
+short DynamixelV2::GetCurrentCurrent(uint8_t id, int32_t mask, int32_t timeout) 
+{
+  uint16_t result;
+  ReadWordData(id, ADDRESS_PRESENT_CURRENT, &result, mask, timeout);
+  if(result >= 1024) {
+    return - (result -1024);
+  } else {
+    return result;
+  }
+}
+
+
 static uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
 {
   uint16_t i, j;

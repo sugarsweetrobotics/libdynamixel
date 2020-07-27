@@ -1693,26 +1693,30 @@ namespace ssr {
 	ReadData<uint32_t>(id, ADDRESS_VELOCITY_LIMIT, &result, timeout);
 	return result;
       }
+    
+    uint32_t GetAccelerationLimit(uint8_t id, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+      uint32_t result;
+      ReadData<uint32_t>(id, ADDRESS_ACCELERATION_LIMIT, &result, timeout);
+      return result;
+    }
+    
+    uint8_t GetMoving(uint8_t id, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+      uint8_t result;
+      ReadData<uint8_t>(id, ADDRESS_MOVING, &result, timeout);
+      return result;
+    }
+    
+    void SetMovingThreshold(uint8_t id, uint32_t movingThreshold, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+      WriteData<uint32_t>(id, ADDRESS_MOVING_THRESHOLD, movingThreshold, timeout);
+    }
 
-	  uint32_t GetAccelerationLimit(uint8_t id, int32_t timeout = DEFAULT_RESPONSE_TIME) {
-		  uint32_t result;
-		  ReadData<uint32_t>(id, ADDRESS_ACCELERATION_LIMIT, &result, timeout);
-		  return result;
-	  }
-
-	  uint8_t GetMoving(uint8_t id, int32_t timeout = DEFAULT_RESPONSE_TIME) {
-		  uint8_t result;
-		  ReadData<uint8_t>(id, ADDRESS_MOVING, &result, timeout);
-		  return result;
-	  }
-
-	  void SetMovingThreshold(uint8_t id, uint32_t movingThreshold, int32_t timeout = DEFAULT_RESPONSE_TIME) {
-		  WriteData<uint32_t>(id, ADDRESS_MOVING_THRESHOLD, movingThreshold, timeout);
-	  }
-
-
+    void SetOperatingMode(uint8_t id, uint8_t mode, int32_t timeout = DEFAULT_RESPONSE_TIME) {
+       WriteData<uint8_t>(id, ADDRESS_OPERATING_MODE, mode, timeout);
+    }
+    
+    
     short GetCurrentCurrent(uint8_t id, int32_t mask=0x7F, int32_t timeout = DEFAULT_RESPONSE_TIME);
-
+    
     void SetTargetCurrent(uint8_t id, short digit, int32_t timeout = DEFAULT_RESPONSE_TIME);
     };
 

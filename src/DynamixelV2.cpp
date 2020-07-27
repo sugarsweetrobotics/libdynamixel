@@ -630,18 +630,15 @@ void DynamixelV2::SetPunch(uint8_t id, uint16_t punch,  int32_t mask, int32_t ti
 */
 
 void DynamixelV2::SetTargetCurrent(uint8_t id, short digit, int32_t timeout) {
-
+  int16_t result;  
+  WriteData<int16_t>(id, ADDRESS_GOAL_CURRENT, digit, timeout);
 }
 
 short DynamixelV2::GetCurrentCurrent(uint8_t id, int32_t mask, int32_t timeout) 
 {
-  uint16_t result;
-  ReadWordData(id, ADDRESS_PRESENT_CURRENT, &result, mask, timeout);
-  if(result >= 1024) {
-    return - (result -1024);
-  } else {
-    return result;
-  }
+  int16_t result;
+  ReadData<int16_t>(id, ADDRESS_PRESENT_CURRENT, &result, timeout);
+  return result;
 }
 
 
